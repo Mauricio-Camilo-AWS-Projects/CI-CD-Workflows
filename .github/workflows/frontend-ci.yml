@@ -43,5 +43,5 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id E3E75WBZWAJEIM \
-            --paths "/*"  validate_files:
+            --paths "/*"
   
