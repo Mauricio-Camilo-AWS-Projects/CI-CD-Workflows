@@ -85,7 +85,7 @@ jobs:
     needs: build_and_test
     if: github.ref == 'refs/heads/main'
     env:
-      ecr_repo: aws-bootcamp-class5
+      ecr_repo: aws-bootcamp-test-01
       aws_region: us-east-1
       tag: latest
 
