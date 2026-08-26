@@ -13,6 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
+        # Não entendi pq não é bom usar esse v4, estudar depois
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -21,11 +22,12 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci # Melhor do que install, pq usa o package-lock, não corre risco de usar outras versões
 
       - name: Validate frontend
         run: npm run test
 
+      # Depois mudar a forma como me autentico
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -35,9 +37,7 @@ jobs:
 
       - name: Upload files to S3
         run: |
-          aws s3 sync . s3://aws-full-project-frontend \
-            --exclude ".git/*" \
-            --exclude ".github/*"
+          aws s3 sync ./src s3://aws-full-project-frontend
 
       - name: Create CloudFront invalidation
         run: |
