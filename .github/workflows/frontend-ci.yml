@@ -8,7 +8,7 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 jobs:
-  deploy:
+  integration:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,6 +27,9 @@ jobs:
       - name: Validate frontend
         run: npm run test
 
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
       # Depois mudar a forma como me autentico
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -44,4 +47,3 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id E3E75WBZWAJEIM \
             --paths "/*"
-  
