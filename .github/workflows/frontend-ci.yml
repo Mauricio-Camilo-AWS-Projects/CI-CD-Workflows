@@ -44,12 +44,12 @@ jobs:
           role-to-assume: arn:aws:iam::808826729764:role/GitHubActions-FrontendDeploy
           aws-region: us-east-1
 
-        - name: Upload files to S3
-          run: |
-            aws s3 sync ./src s3://aws-full-project-frontend
+      - name: Upload files to S3
+        run: |
+          aws s3 sync ./src s3://aws-full-project-frontend
 
-        - name: Create CloudFront invalidation
-          run: |
-            aws cloudfront create-invalidation \
-              --distribution-id E3E75WBZWAJEIM \
-              --paths "/*"
+      - name: Create CloudFront invalidation
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E3E75WBZWAJEIM \
+            --paths "/*"
