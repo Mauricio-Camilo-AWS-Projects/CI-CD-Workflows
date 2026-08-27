@@ -29,7 +29,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-
+    needs: integration
     permissions:
       contents: read # Permite que o checkout leia o repo
       id-token: write # Permite que o workflow solicite o OIDC
