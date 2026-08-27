@@ -35,6 +35,12 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Run SonarQube analysis
         run: |
           npx sonar-scanner \

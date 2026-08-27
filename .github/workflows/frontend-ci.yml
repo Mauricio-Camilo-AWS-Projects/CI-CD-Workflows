@@ -2,18 +2,13 @@ name: Frontend CI Workflow
 
 on: 
   workflow_call: 
-    # secrets:
-    #   AWS_ACCESS_KEY_ID:
-    #     required: true
-    #   AWS_SECRET_ACCESS_KEY:
-    #     required: true
+
 jobs:
   integration:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        # Não entendi pq não é bom usar esse v4, estudar depois
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -22,7 +17,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci # Melhor do que install, pq usa o package-lock, não corre risco de usar outras versões
+        run: npm ci
 
       - name: Validate frontend
         run: npm run test
@@ -31,8 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: integration
     permissions:
-      # contents: read # Permite que o checkout leia o repo
-      id-token: write # Permite que o workflow solicite o OIDC
+      id-token: write 
 
     steps:
       - name: Checkout repository
