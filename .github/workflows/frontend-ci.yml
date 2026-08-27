@@ -29,21 +29,27 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # Permite que o checkout leia o repo
+      id-token: write # Permite que o workflow solicite o OIDC
+
     steps:
-      # Depois mudar a forma como me autentico
+      - name: Checkout repository
+        uses: actions/checkout@v4 
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::808826729764:role/GitHubActions-FrontendDeploy
           aws-region: us-east-1
 
-      - name: Upload files to S3
-        run: |
-          aws s3 sync ./src s3://aws-full-project-frontend
+        - name: Upload files to S3
+          run: |
+            aws s3 sync ./src s3://aws-full-project-frontend
 
-      - name: Create CloudFront invalidation
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id E3E75WBZWAJEIM \
-            --paths "/*"
+        - name: Create CloudFront invalidation
+          run: |
+            aws cloudfront create-invalidation \
+              --distribution-id E3E75WBZWAJEIM \
+              --paths "/*"
