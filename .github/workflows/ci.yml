@@ -50,7 +50,21 @@ jobs:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-          
+            ${{ runner.os }}-node-
+
+      # 2º CACHE: Compilação Incremental do TypeScript (Novo bloco para o teste)
+      - name: Cache TypeScript Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .tsbuildinfo
+            dist
+          # A chave muda se QUALQUER arquivo .ts dentro de 'src' for alterado
+          key: ${{ runner.os }}-ts-build-${{ hashFiles('src/**/*.ts') }}
+          # Se você alterar um arquivo, ele usa o 'restore-keys' para baixar o .tsbuildinfo 
+          # do commit anterior, permitindo que o tsc faça o build incremental rápido.
+          restore-keys: |
+            ${{ runner.os }}-ts-build-
 
       - name: Install dependencies
         run: npm ci
