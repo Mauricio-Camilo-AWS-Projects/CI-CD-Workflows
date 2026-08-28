@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate_files
     env:
-      NODE_VERSION: 18
+      NODE_VERSION: 24
 
     steps:
       - name: Checkout code
