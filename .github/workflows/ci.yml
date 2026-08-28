@@ -52,18 +52,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # 2º CACHE: Compilação Incremental do TypeScript (Resetado com -v2)
-      - name: Cache TypeScript Build
-        uses: actions/cache@v4
-        with:
-          path: |
-            .tsbuildinfo
-            dist
-          # Adicionado -v2 para forçar o GitHub a ignorar o cache antigo corrompido
-          key: ${{ runner.os }}-ts-build-v2-${{ hashFiles('src/**/*.ts') }}
-          restore-keys: |
-            ${{ runner.os }}-ts-build-v2-
-
       - name: Install dependencies
         run: npm ci
 
