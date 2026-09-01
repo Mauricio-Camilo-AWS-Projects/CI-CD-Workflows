@@ -49,10 +49,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Analyze
-        uses: github/codeql-action/analyze@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
         with:
-          category: "/language:javascript-typescript"
+          languages: javascript-typescript
 
       - name: Cache npm dependencies
         uses: actions/cache@v4
@@ -66,7 +66,9 @@ jobs:
         run: npm ci
 
       - name: Analyze
-        uses: github/codeql-action/analyze@v4            
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:javascript-typescript"        
 
       - name: Build the application
         run: npm run build
