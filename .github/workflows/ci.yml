@@ -68,7 +68,7 @@ jobs:
       - name: Analyze
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:javascript-typescript"        
+          category: "/test:javascript-typescript"        
 
       - name: Build the application
         run: npm run build
