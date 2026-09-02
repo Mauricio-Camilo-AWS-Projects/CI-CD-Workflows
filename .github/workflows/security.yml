@@ -7,7 +7,7 @@ jobs:
   sast_analysis:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: 18
+      NODE_VERSION: 20
 
     permissions:
       security-events: write
