@@ -50,9 +50,16 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Initialize CodeQL
+        if: github.ref == 'refs/heads/main'
         uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
+
+      - name: Analyze
+        if: github.ref == 'refs/heads/main'
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/new:javascript-typescript"
 
       - name: Cache npm dependencies
         uses: actions/cache@v4
@@ -64,11 +71,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Analyze
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/new:javascript-typescript"        
 
       - name: Build the application
         run: npm run build
