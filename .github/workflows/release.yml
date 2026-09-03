@@ -140,10 +140,10 @@ jobs:
     permissions:
       id-token: write 
 
-      env:
-        ecr_repo: aws-bootcamp-test-01
-        aws_region: us-east-1
-        tag: latest
+    env:
+      ecr_repo: aws-bootcamp-test-01
+      aws_region: us-east-1
+      tag: latest
 
     steps:
       - name: Checkout code
