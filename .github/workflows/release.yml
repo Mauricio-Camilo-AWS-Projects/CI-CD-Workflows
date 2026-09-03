@@ -153,6 +153,14 @@ jobs:
       - name: Build Docker Image
         run: docker build -t ${{ env.ecr_repo }} .
 
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ecr_repo }}:${{ env.tag }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -170,14 +178,6 @@ jobs:
         run: |
           docker tag ${{ env.ecr_repo }}:${{ env.tag }} ${{ env.ecr_registry }}/${{ env.ecr_repo }}:${{ env.tag }}
           docker push ${{ env.ecr_registry }}/${{ env.ecr_repo }}:${{ env.tag }}
-
-      - name: Docker Scout CVEs
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: ${{ env.ecr_repo }}:${{ env.tag }}
-          only-severities: high,critical
-          exit-code: true
   
   call_cd_workflow:
     needs: docker_build_and_push
