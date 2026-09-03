@@ -43,6 +43,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: SCA
+        run: npm audit --audit-level=high
+
       - name: Build the application
         run: npm run build
 
