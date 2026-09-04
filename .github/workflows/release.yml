@@ -63,11 +63,22 @@ jobs:
       - name: SCA 
         run: npm audit --audit-level=high
 
+# Build the application with tsc
       - name: Build the application
         run: npm run build
 
+# Run unit tests with npx jest --reporters=default --reporters=jest-junit
       - name: Run unit tests
         run: npm run test
+
+# Save tests for audit and fast debug
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Tests
+          path: 'junit.xml'
+          reporter: jest-junit
 
 # Setup java version to run Sonarqube analysis        
       - name: Setup Java
@@ -107,6 +118,7 @@ jobs:
 # SAST to check vulnerabilities in the code. Runs in parallel with build to improve performance.
   sast_analysis:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     needs: validate_files
 
     permissions:
@@ -140,7 +152,6 @@ jobs:
 
   docker_build_and_push:
     runs-on: ubuntu-latest
-    # needs: [build_and_test]
     needs: [build_and_test, sast_analysis]
     if: github.ref == 'refs/heads/main'
 
