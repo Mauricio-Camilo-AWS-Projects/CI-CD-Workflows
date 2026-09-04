@@ -1,4 +1,4 @@
-name: Test CI Workflow
+name: Complete CI Workflow
 
 on: 
   workflow_call: 
@@ -122,7 +122,7 @@ jobs:
     needs: validate_files
 
     permissions:
-      security-events: write
+      security-events: write # Permission to upload the SARIF to security
       actions: read
       contents: read
 
@@ -156,6 +156,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     permissions:
+      # Gives permission to job to ask for an OIDC token signed by Github (JWT)
       id-token: write 
 
     env:
@@ -180,7 +181,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
 
-# Uses OIDC, to tell AWS that tokens for this github actions are reliable. Roles for least privilege.
+# Sends OIDC token to AWS via STS, and returns temporary credentials with the role permissions
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -192,6 +193,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+# Push image to Amazon ECR
       - name: Tag and Push Image to ECR
         id: docker-tag-push  
         env:
