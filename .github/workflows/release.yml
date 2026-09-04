@@ -9,10 +9,9 @@ on:
         required: true
       SONAR_ORGANIZATION:
         required: true
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
+
+env:
+  NODE_VERSION: 24
 
 jobs:
   validate_files:
@@ -32,8 +31,6 @@ jobs:
   build_and_test:
     runs-on: ubuntu-latest
     needs: validate_files
-    env:
-      NODE_VERSION: 24
 
     permissions:
       security-events: write
@@ -49,6 +46,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+# Download dependencies in 1st time, then uses cache in post runs
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
@@ -57,9 +55,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+# Download dependencies from package-lock
       - name: Install dependencies
         run: npm ci
 
+# SCA to check vulnerabilities, fix with npm audit fix that updates package-lock.json
       - name: SCA 
         run: npm audit --audit-level=high
 
@@ -69,71 +69,81 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
+# Save test results for audit and fast debug in case of failure
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Tests
+          path: 'junit.xml'
+          reporter: jest-junit        
+
+# Setup java version to run Sonarqube analysis        
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      # - name: Run SonarQube analysis
-      #   if: github.ref == 'refs/heads/main'
-      #   run: |
-      #     npx sonar-scanner \
-      #       -Dsonar.host.url=https://sonarcloud.io \
-      #       -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-      #       -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
-      #       -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
-      #       -Dsonar.sources=src \
-      #       -Dsonar.tests=src/tests \
-      #       -Dsonar.exclusions=**/*.test.ts \
-      #       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-      #     SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+# Run quality code check, considering the tests in the cover          
+      - name: Run SonarQube analysis
+        if: github.ref == 'refs/heads/main'
+        run: |
+          npx sonar-scanner \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.sources=src \
+            -Dsonar.tests=src/tests \
+            -Dsonar.exclusions=**/*.test.ts \
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
 
-      # - name: SonarCloud Quality Gate
-      #   if: github.ref == 'refs/heads/main'
-      #   uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-      #     SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+# Quality gate that will block the pipeline if the analysis has a failure status
+      - name: SonarCloud Quality Gate
+        if: github.ref == 'refs/heads/main'
+        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
 
-  # sast_analysis:
-  #   runs-on: ubuntu-latest
-  #   needs: build_and_test
-  #   env:
-  #     NODE_VERSION: 20
+  sast_analysis:
+    runs-on: ubuntu-latest
+    needs: build_and_test
 
-  #   permissions:
-  #     security-events: write
-  #     actions: read
-  #     contents: read
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  #     - name: Initialize CodeQL
-  #       uses: github/codeql-action/init@v4
-  #       with:
-  #         languages: javascript-typescript
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
 
-  #     - name: CodeQL Analysis
-  #       uses: github/codeql-action/analyze@v4
-  #       with:
-  #         category: "/security:javascript-typescript"
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/security:javascript-typescript"
 
-  #     - name: Fail PR if critical/high alerts found
-  #       uses: tspascoal/fail-workflow-on-alerts-action@v0
-  #       with:
-  #         max_errors: 0     # qualquer alerta "error"/critical-high falha o gate
-  #         max_warnings: -1  # -1 = não considera esse nível
-  #         max_notes: -1
-  #         max_unknowns: -1
-  #         max_none: -1
+      - name: Fail PR if critical/high alerts found
+        uses: tspascoal/fail-workflow-on-alerts-action@v0
+        with:
+          max_errors: 0     
+          max_warnings: -1
+          max_notes: -1
+          max_unknowns: -1
+          max_none: -1
 
   docker_build_and_push:
     runs-on: ubuntu-latest
